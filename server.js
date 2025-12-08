@@ -3,9 +3,7 @@ import cors from 'cors'
 import sequelize from './src/config/db.js'
 import './src/models/Association.js'
 import dotenv from 'dotenv'
-// import connectDB from './src/config/db.js';
-// import routes from './routes.js'
-  // import "./src/models/Project.model.js"
+import routes from './routes.js'
 dotenv.config();
 const app=express()
 
@@ -17,7 +15,7 @@ sequelize.sync()
   .then(() => console.log("Database connected & associations applied"))
   .catch(err => console.error(err));
 
-// app.use('/api',routes)
+app.use('/api',routes)
 app.get('/',(req,res)=>{
 res.send("Hello How Are You");
 }

@@ -1,6 +1,12 @@
 // import e from "express";
 // import { Employee } from "../models/Employee.model.js";
-// const requiredSkills = {
+import { Op } from "sequelize";
+import {
+  Employee,
+  EmployeeDepartmentHistory,
+  EmployeeSalaryHistory,
+} from "../models/AllModels.js";
+
 //   1: [
 //     "JavaScript",
 //     "Node.js",
@@ -38,159 +44,128 @@
 //   ],
 // };
 
-// //Monthly Reports
-// export const getNewHires = async () => {
-//   try {
-//     const today = new Date();
-//     const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
-//     const endOfMonth = new Date(
-//       today.getFullYear(),
-//       today.getMonth() + 1,
-//       0,
-//       23,
-//       59,
-//       59
-//     );
+//Monthly Reports
+export const getNewHires = async () => {
+  const startmonth = new Date(
+    new Date().getFullYear(),
+    new Date().getMonth(),
+    1
+  );
+  const endmonth = new Date(
+    new Date().getFullYear(),
+    new Date().getMonth() + 1,
+    0
+  );
+  try {
+    const data = await Employee.findAll({
+      where: {
+        hire_date: {
+          [Op.between]: [startmonth, endmonth],
+        },
+      },
+    });
+    return { data };
+  } catch (err) {
+    console.error("Error in getNewHires:", err);
+    return [];
+  }
+};
 
-//     const hires = await Employee.aggregate([
-//       {
-//         $match: {
-//           hire_date: { $gte: startOfMonth, $lte: endOfMonth },
-//         },
-//       },
-//       {
-//         $project: {
-//           _id: 0,
-//           employee_id: 1,
-//           name: 1,
-//           hire_date: 1,
-//           department_id: 1,
-//         },
-//       },
-//     ]);
+export const getDepartures = async () => {
+  const startmonth = new Date(
+    new Date().getFullYear(),
+    new Date().getMonth(),
+    1
+  );
+  const endmonth = new Date(
+    new Date().getFullYear(),
+    new Date().getMonth() + 1,
+    0
+  );
+  try {
+    const data = await Employee.findAll({
+      where: {
+        departure_date: {
+          [Op.between]: [startmonth, endmonth],
+        },
+      },
+    });
+    return { data };
+  } catch (err) {
+    console.error("Error in getDeparture:", err);
+    return [];
+  }
+};
 
-//     console.log("New hires found:", hires.length);
-//     return hires;
-//   } catch (err) {
-//     console.error("Error in getNewHires:", err);
-//     return [];
-//   }
-// };
+export const getSalaryChnages = async () => {
+  try {
+    const startmonth = new Date(
+      new Date().getFullYear(),
+      new Date().getMonth(),
+      1
+    );
+    const endmonth = new Date(
+      new Date().getFullYear(),
+      new Date().getMonth() + 1,
+      0
+    );
 
-// export const getDepartures = async () => {
-//   try {
-//     const today = new Date();
-//     const startOfMonth = new Date(
-//       Date.UTC(today.getFullYear(), today.getMonth(), 1)
-//     );
-//     const endOfMonth = new Date(
-//       Date.UTC(today.getFullYear(), today.getMonth() + 1, 0, 23, 59, 59)
-//     );
-//     return Employee.aggregate([
-//       {
-//         $match: {
-//           status: "inactive",
-//           departure_date: {
-//             $gte: startOfMonth,
-//             $lte: endOfMonth,
-//           },
-//         },
-//       },
-//     ]);
-//   } catch (err) {
-//     console.log(err);
-//   }
-// };
+    const data = await Employee.findAll({
+      attributes: ["employee_id", "name", ["salary", "current_salary"]],
+      include: [
+        {
+          model: EmployeeSalaryHistory,
+          attributes: [["salary", "previous_salary"], "date"],
+          where: {
+            date: { [Op.between]: [startmonth, endmonth] },
+          },
+          required: true,
+        },
+      ],
+      order: [[EmployeeSalaryHistory, "date", "DESC"]], // latest first
+    });
 
-// export const getSalaryChnages = async () => {
-//   const today = new Date();
-//   const startOfMonth = new Date(
-//     Date.UTC(today.getFullYear(), today.getMonth(), 1)
-//   );
-//   const endOfMonth = new Date(
-//     Date.UTC(today.getFullYear(), today.getMonth() + 1, 0, 23, 59, 59)
-//   );
+    return data;
+  } catch (err) {
+    console.log(err);
+    return [];
+  }
+};
 
-//   return Employee.aggregate([
-//     {
-//       $addFields: {
-//         old_salary: {
-//           $arrayElemAt: ["$salary_history.salary", 0],
-//         },
-//       },
-//     },
-//     { $unwind: "$salary_history" },
-//     {
-//       $match: {
-//         "salary_history.date": {
-//           $gte: startOfMonth,
-//           $lte: endOfMonth,
-//         },
-//       },
-//     },
-//     {
-//       $project: {
-//         _id: 0,
-//         employee_id: 1,
-//         name: 1,
-//         old_salary: 1,
-//         new_salary: "$salary_history.salary",
-//         change_date: "$salary_history.date",
-//       },
-//     },
-//   ]);
-// };
+export const departmentChange = async () => {
+  try {
+    const startmonth = new Date(
+      new Date().getFullYear(),
+      new Date().getMonth(),
+      1
+    );
+    const endmonth = new Date(
+      new Date().getFullYear(),
+      new Date().getMonth() + 1,
+      0
+    );
+    const data = await Employee.findAll({
+      attributes: ["employee_id", "name", "department_id"],
+      include: {
+        model: EmployeeDepartmentHistory,
+        attributes: ["department_id", "start_date", "end_date"],
+        where: {
+          start_date: {
+            [Op.between]: [startmonth, endmonth],
+          },
+        },
+      },
+    });
+    return data;
+  } catch (err) {
+    console.log(err);
+    return [];
+  }
+};
 
-// export const departmentChange = async () => {
-//   const today = new Date();
 
-//   const startOfMonth = new Date(
-//     Date.UTC(today.getFullYear(), today.getMonth(), 1)
-//   );
-//   const endOfMonth = new Date(
-//     Date.UTC(today.getFullYear(), today.getMonth() + 1, 0, 23, 59, 59)
-//   );
 
-//   return Employee.aggregate([
-//     // Step 1: Unwind history
-//     { $unwind: "$department_history" },
 
-//     // Step 2: Convert string → date safely
-//     {
-//       $addFields: {
-//         endDateConverted: {
-//           $cond: [
-//             { $eq: [{ $type: "$department_history.end_date" }, "string"] },
-//             { $toDate: "$department_history.end_date" },
-//             "$department_history.end_date",
-//           ],
-//         },
-//       },
-//     },
-
-//     // Step 3: Filter by converted date
-//     {
-//       $match: {
-//         endDateConverted: {
-//           $gte: startOfMonth,
-//           $lte: endOfMonth,
-//         },
-//       },
-//     },
-
-//     // Step 4: Output clean result
-//     {
-//       $project: {
-//         _id: 0,
-//         employee_id: 1,
-//         name: 1,
-//         old_department_id: "$department_history.department_id",
-//         new_department_id: "$department_id",
-//         change_date: "$endDateConverted",
-//       },
-//     },
-//   ]);
-// };
 
 // //skills-inventory
 // export const mostCommnSkiil = async () => {
