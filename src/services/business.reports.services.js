@@ -1,6 +1,6 @@
 // import e from "express";
 // import { Employee } from "../models/Employee.model.js";
-import { col, Op } from "sequelize";
+import { Op, fn, col, literal } from "sequelize";
 import {
   Employee,
   EmployeeDepartmentHistory,
@@ -8,7 +8,7 @@ import {
   EmployeeSkill,
   DepartmentRequiredSkill,
   sequelize,
-  EmployeePromotionHistory
+  EmployeePromotionHistory,
 } from "../models/AllModels.js";
 
 //   1: [
@@ -257,31 +257,18 @@ export const salaryBand = async () => {
   }
 };
 
-//Bonus-Eligiblity
 export const bonusEligibility = async () => {
   try {
     const data = await Employee.findAll({
       attributes: ["employee_id", "name", "position", "salary"],
-      where: {
-        [Op.and]: [
-          sequelize.where(
-            fn("DATEDIFF", fn("CURRENT_DATE"), col("hire_date")),
-            { [Op.gt]: 180 }
-          ),
-        ],
-      },
+      where: literal(`CURRENT_DATE - "hire_date" > 180`),
     });
+    return data;
   } catch (err) {
     console.log(err);
+    return [];
   }
 };
-
-// //promtion recommndation
-// ✔ High performers → performance_score > 8
-// ✔ If they have a promotion history → last promotion must be > 360 days ago
-// ✔ If they don't have promotion history → hire date must be > 360 days ago
-// ✔ Even new employees should pass if they meet rule-2
-
 export const promotionRecommendation = async () => {
   try {
     const data = await Employee.findAll({
@@ -290,13 +277,20 @@ export const promotionRecommendation = async () => {
         "name",
         "position",
         "salary",
-        [fn("MAX", col("EmployeePromotionHistories.date")), "last_promotion_date"],
+
+        // LAST Promotion Date
+        [
+          fn("MAX", col('"EmployeePromotionHistories"."change_date"')),
+          "last_promotion_date"
+        ],
+
+        // Days since last promotion OR hire date
         [
           literal(`
             CASE
-              WHEN MAX(EmployeePromotionHistories.date) IS NOT NULL
-                THEN DATEDIFF(CURRENT_DATE, MAX(EmployeePromotionHistories.date))
-              ELSE DATEDIFF(CURRENT_DATE, hire_date)
+              WHEN MAX("EmployeePromotionHistories"."change_date") IS NOT NULL
+                THEN CURRENT_DATE - MAX("EmployeePromotionHistories"."change_date")
+              ELSE CURRENT_DATE - "hire_date"
             END
           `),
           "days_since_last_promotion_or_hire"
@@ -305,22 +299,31 @@ export const promotionRecommendation = async () => {
       include: [
         {
           model: EmployeePromotionHistory,
-          attributes: [],
-          required: false
+          attributes: [], //
+          required: false, // LEFT JOIN
         }
       ],
       where: {
-        performance_score: { [Op.gt]: 8 } 
+        performance_score: { [Op.gt]: 8 },
       },
-      group: ["Employee.employee_id", "Employee.name", "Employee.position", "Employee.salary"],
       having: literal(`
         (
-          (MAX(EmployeePromotionHistories.date) IS NOT NULL AND DATEDIFF(CURRENT_DATE, MAX(EmployeePromotionHistories.date)) > 360)
+          (MAX("EmployeePromotionHistories"."change_date") IS NOT NULL  
+            AND CURRENT_DATE - MAX("EmployeePromotionHistories"."change_date") > 360)
           OR
-          (MAX(EmployeePromotionHistories.date) IS NULL AND DATEDIFF(CURRENT_DATE, hire_date) > 360)
+          (MAX("EmployeePromotionHistories"."change_date") IS NULL 
+            AND CURRENT_DATE - "hire_date" > 360)
         )
       `),
-      order: [[literal("last_promotion_date"), "ASC"]],
+      group: [
+        "Employee.employee_id",
+        "Employee.name",
+        "Employee.position",
+        "Employee.salary"
+      ],
+      order: [
+        [literal("last_promotion_date"), "ASC"]
+      ],
       raw: true
     });
 
