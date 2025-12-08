@@ -3,7 +3,7 @@
 
 // import { bonusEligibility, departmentChange, getDepartures, getNewHires, getSalaryChnages, mostCommnSkiil, mostRareSkill, promotionRecomondation, salaryBand, skillsGapDepartment } from "../services/business.reports.services.js";
 
-import {getNewHires,getDepartures,getSalaryChnages,departmentChange,mostCommnSkiil, mostRareSkill,skillsGapDepartment} from '../services/business.reports.services.js';
+import {getNewHires,getDepartures,getSalaryChnages,departmentChange,mostCommnSkiil, mostRareSkill,skillsGapDepartment, salaryBand, bonusEligibility, promotionRecomondation} from '../services/business.reports.services.js';
 
 export const newHiresController = async (req, res) => {
   try {
@@ -145,47 +145,47 @@ export const skillsGap=async(req,res)=>{
 }
 
 
-// export const employeeSalaryBan=async(req,res)=>{
-//   try{
-//     const data=await salaryBand();
-//     if(data){
-//       res.status(200).json(data)
-//     }else{
-//       res.status(500).json("some err occured")
-//     }
-//   }
-//   catch(errr){
-//     console.log(errr);
-//     res.status(500).json("some err occured")
-//   }
-// }
+export const employeeSalaryBan=async(req,res)=>{
+  try{
+    const data=await salaryBand();
+    if(data){
+      res.status(200).json(data)
+    }else{
+      res.status(500).json("some err occured")
+    }
+  }
+  catch(errr){
+    console.log(errr);
+    res.status(500).json("some err occured")
+  }
+}
 
-// export const Bonus=async(req,res)=>{
-//    try{
-//     const data=await bonusEligibility();
-//     if(data){
-//       res.status(200).json(data)
-//     }else{
-//       res.status(500).json("some err occured")
-//     }
-//   }
-//   catch(errr){
-//     console.log(errr);
-//     res.status(500).json("some err occured")
-//   }
-// }
+export const Bonus=async(req,res)=>{
+   try{
+    const data=await bonusEligibility();
+    if(data){
+      res.status(200).json(data)
+    }else{
+      res.status(500).json("some err occured")
+    }
+  }
+  catch(errr){
+    console.log(errr);
+    res.status(500).json("some err occured")
+  }
+}
 
-// export const recomondation=async(req,res)=>{
-//   try{
-//     const data=await promotionRecomondation();
-//     if(data){
-//       res.status(200).json(data)
-//     }else{
-//       res.status(500).json("some err occured")
-//     }
-//   }
-//   catch(errr){
-//     console.log(errr);
-//     res.status(500).json("some err occured")
-//   }
-// }
+export const recomondation=async(req,res)=>{
+  try{
+    const data=await promotionRecomondation();
+    if(data){
+      res.status(200).json(data)
+    }else{
+      res.status(500).json("some err occured")
+    }
+  }
+  catch(errr){
+    console.log(errr);
+    res.status(500).json("some err occured")
+  }
+}

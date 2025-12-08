@@ -1,13 +1,14 @@
 // import e from "express";
 // import { Employee } from "../models/Employee.model.js";
-import { Op } from "sequelize";
+import { col, Op } from "sequelize";
 import {
   Employee,
   EmployeeDepartmentHistory,
   EmployeeSalaryHistory,
   EmployeeSkill,
   DepartmentRequiredSkill,
-  sequelize
+  sequelize,
+  EmployeePromotionHistory
 } from "../models/AllModels.js";
 
 //   1: [
@@ -166,22 +167,18 @@ export const departmentChange = async () => {
   }
 };
 
-
-
-
-
 // //skills-inventory
 export const mostCommnSkiil = async () => {
   try {
-    const data=await EmployeeSkill.findAll({
-      attributes:[
-        'skill',
-        [sequelize.fn('COUNT',sequelize.col('skill')),'count']
+    const data = await EmployeeSkill.findAll({
+      attributes: [
+        "skill",
+        [sequelize.fn("COUNT", sequelize.col("skill")), "count"],
       ],
-      group:['skill'],
-      order:[['count','DESC']], 
-      limit:3  
-    })
+      group: ["skill"],
+      order: [["count", "DESC"]],
+      limit: 3,
+    });
     return data;
   } catch (ex) {
     console.log(ex);
@@ -190,17 +187,16 @@ export const mostCommnSkiil = async () => {
 
 export const mostRareSkill = async () => {
   try {
-    const data=await EmployeeSkill.findAll({
-      attributes:[
-        'skill',
-        [sequelize.fn('COUNT',sequelize.col('skill')),'count']
+    const data = await EmployeeSkill.findAll({
+      attributes: [
+        "skill",
+        [sequelize.fn("COUNT", sequelize.col("skill")), "count"],
       ],
-      group:['skill'],
-      order:[['count','ASC']], 
-      limit:3  
-    })
+      group: ["skill"],
+      order: [["count", "ASC"]],
+      limit: 3,
+    });
     return data;
-    
   } catch (exception) {
     console.log(exception);
   }
@@ -209,21 +205,28 @@ export const mostRareSkill = async () => {
 export const skillsGapDepartment = async () => {
   try {
     const requiredSkills = await DepartmentRequiredSkill.findAll({
-      attributes: ['department_id', 'skill'],
-      raw: true
+      attributes: ["department_id", "skill"],
+      raw: true,
     });
 
     const employeeSkills = await EmployeeSkill.findAll({
-      attributes: ['employee_id', 'skill'],
-      include: [{
-        model: Employee,
-        attributes: ['department_id']
-      }],
-      raw: true
+      attributes: ["employee_id", "skill"],
+      include: [
+        {
+          model: Employee,
+          attributes: ["department_id"],
+        },
+      ],
+      raw: true,
     });
 
-    const gap = requiredSkills.filter(req => 
-      !employeeSkills.some(emp => emp['Employee.department_id'] === req.department_id && emp.skill === req.skill)
+    const gap = requiredSkills.filter(
+      (req) =>
+        !employeeSkills.some(
+          (emp) =>
+            emp["Employee.department_id"] === req.department_id &&
+            emp.skill === req.skill
+        )
     );
 
     return gap;
@@ -235,156 +238,95 @@ export const skillsGapDepartment = async () => {
 
 // //Compensation Analysis
 
-// //salary-band
-// export const salaryBand = async () => {
-//   try {
-//     return Employee.aggregate([
-//       {
-//         $group: {
-//           _id: "$position",
-//           avgsalary: { $avg: "$salary" },
-//           minsalary: { $min: "$salary" },
-//           maxsalary: { $max: "$salary" },
-//           count: { $sum: 1 },
-//         },
-//       },
-//       {
-//         $project: {
-//           _id: 0,
-//           position: "$_id",
-//           avgsalary: 1,
-//           minsalary: 1,
-//           maxsalary: 1,
-//           count: 1,
-//         },
-//       },
-//     ]);
-//   } catch (err) {
-//     console.log(err);
-//   }
-// };
+//salary-band by position
 
-// //Bonus-Eligiblity
-// export const bonusEligibility = async () => {
-//   try {
-//     return Employee.aggregate([
-//       {
-//         $addFields: {
-//           hireDateConverted: {
-//             $cond: [
-//               { $eq: [{ $type: "$hire_date" }, "string"] },
-//               { $toDate: "$hire_date" },
-//               "$hire_date",
-//             ],
-//           },
-//         },
-//       },
-//       {
-//         $addFields: {
-//           tenure_months: {
-//             $divide: [
-//               { $subtract: ["$$NOW", "$hireDateConverted"] },
-//               1000 * 60 * 60 * 24 * 30,
-//             ],
-//           },
-//         },
-//       },
-//       {
-//         $match: {
-//           tenure_months: { $gte: 12 },
-//           performance_score: { $gte: 8 },
-//           status: "active",
-//         },
-//       },
-//       {
-//         $project: {
-//           _id: 0,
-//           employee_id: 1,
-//           name: 1,
-//           department_id: 1,
-//           position: 1,
-//           performance_score: 1,
-//           tenure_months: { $round: ["$tenure_months", 1] },
-//         },
-//       },
-//     ]);
-//   } catch (err) {
-//     console.log(err);
-//   }
-// };
+export const salaryBand = async () => {
+  try {
+    const data = await Employee.findAll({
+      attributes: [
+        "position",
+        [sequelize.fn("MIN", sequelize.col("salary")), "min_salary"],
+        [sequelize.fn("MAX", sequelize.col("salary")), "max_salary"],
+        [sequelize.fn("AVG", sequelize.col("salary")), "avg_salary"],
+      ],
+      group: ["position"],
+    });
+    return data;
+  } catch (err) {
+    console.log(err);
+  }
+};
+
+//Bonus-Eligiblity
+export const bonusEligibility = async () => {
+  try {
+    const data = await Employee.findAll({
+      attributes: ["employee_id", "name", "position", "salary"],
+      where: {
+        [Op.and]: [
+          sequelize.where(
+            fn("DATEDIFF", fn("CURRENT_DATE"), col("hire_date")),
+            { [Op.gt]: 180 }
+          ),
+        ],
+      },
+    });
+  } catch (err) {
+    console.log(err);
+  }
+};
+
 // //promtion recommndation
-// export const promotionRecomondation = async () => {
-//   try {
-//     return Employee.aggregate([
-//       {
-//         $addFields: {
-//           latestPromotion: { $last: "$promotion_history" },
-//         },
-//       },
+// ✔ High performers → performance_score > 8
+// ✔ If they have a promotion history → last promotion must be > 360 days ago
+// ✔ If they don't have promotion history → hire date must be > 360 days ago
+// ✔ Even new employees should pass if they meet rule-2
 
-//       {
-//         $addFields: {
-//           hireDateConverted: {
-//             $cond: [
-//               { $eq: [{ $type: "$hire_date" }, "string"] },
-//               { $toDate: "$hire_date" },
-//               "$hire_date",
-//             ],
-//           },
-//           lastPromotionConverted: {
-//             $cond: [
-//               { $eq: [{ $type: "$latestPromotion.date" }, "string"] },
-//               { $toDate: "$latestPromotion.date" },
-//               "$latestPromotion.date",
-//             ],
-//           },
-//         },
-//       },
+export const promotionRecommendation = async () => {
+  try {
+    const data = await Employee.findAll({
+      attributes: [
+        "employee_id",
+        "name",
+        "position",
+        "salary",
+        [fn("MAX", col("EmployeePromotionHistories.date")), "last_promotion_date"],
+        [
+          literal(`
+            CASE
+              WHEN MAX(EmployeePromotionHistories.date) IS NOT NULL
+                THEN DATEDIFF(CURRENT_DATE, MAX(EmployeePromotionHistories.date))
+              ELSE DATEDIFF(CURRENT_DATE, hire_date)
+            END
+          `),
+          "days_since_last_promotion_or_hire"
+        ]
+      ],
+      include: [
+        {
+          model: EmployeePromotionHistory,
+          attributes: [],
+          required: false
+        }
+      ],
+      where: {
+        performance_score: { [Op.gt]: 8 } 
+      },
+      group: ["Employee.employee_id", "Employee.name", "Employee.position", "Employee.salary"],
+      having: literal(`
+        (
+          (MAX(EmployeePromotionHistories.date) IS NOT NULL AND DATEDIFF(CURRENT_DATE, MAX(EmployeePromotionHistories.date)) > 360)
+          OR
+          (MAX(EmployeePromotionHistories.date) IS NULL AND DATEDIFF(CURRENT_DATE, hire_date) > 360)
+        )
+      `),
+      order: [[literal("last_promotion_date"), "ASC"]],
+      raw: true
+    });
 
-//       {
-//         $addFields: {
-//           tenure_months: {
-//             $divide: [
-//               { $subtract: ["$$NOW", "$hireDateConverted"] },
-//               1000 * 60 * 60 * 24 * 30,
-//             ],
-//           },
-//           months_since_last_promotion: {
-//             $divide: [
-//               { $subtract: ["$$NOW", "$lastPromotionConverted"] },
-//               1000 * 60 * 60 * 24 * 30,
-//             ],
-//           },
-//         },
-//       },
-
-//       // Step 4: Apply promotion-recommendation rules
-//       {
-//         $match: {
-//           status: "active",
-//           performance_score: { $gte: 8 },
-//           tenure_months: { $gte: 18 },
-//           months_since_last_promotion: { $gte: 12 },
-//         },
-//       },
-
-//       // Step 5: Final output
-//       {
-//         $project: {
-//           _id: 0,
-//           employee_id: 1,
-//           name: 1,
-//           department_id: 1,
-//           position: 1,
-//           performance_score: 1,
-//           tenure_months: { $round: ["$tenure_months", 1] },
-//           months_since_last_promotion: {
-//             $round: ["$months_since_last_promotion", 1],
-//           },
-//         },
-//       },
-//     ]);
-//   } catch (err) {
-//     console.log(err);
-//   }
-// };
+    return data;
+  } catch (err) {
+    console.error("Promotion Recommendation Error:", err);
+    return [];
+  }
+};
