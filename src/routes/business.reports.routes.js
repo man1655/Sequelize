@@ -1,6 +1,6 @@
 import express from 'express'
 // import { Bonus, commonskill, departmentChangeController, departuresController, employeeSalaryBan, newHiresController, rareSkill, recomondation, salaryChangesController, skillsGap } from '../Controllers/business.reports.controller.js';
-import {newHiresController,departuresController,salaryChangesController, departmentChangeController,commonskill, rareSkill,skillsGap} from '../Controllers/business.reports.controller.js'
+import {newHiresController,departuresController,salaryChangesController, departmentChangeController,commonskill, rareSkill,skillsGap, employeeSalaryBan, Bonus, recomondation} from '../Controllers/business.reports.controller.js'
 
 
 
@@ -18,8 +18,8 @@ Router.get('/rareSkill',rareSkill)
 Router.get('/skillsGap',skillsGap)
 
 // //COMPNASATION ANALYSIS
-// Router.get('/salary-band',employeeSalaryBan);
-// Router.get('/bonus',Bonus)
-// Router.get('/promotion',recomondation)
+Router.get('/salary-band',employeeSalaryBan);
+Router.get('/bonus',Bonus)
+Router.get('/promotion',recomondation)
 
 export default Router;
