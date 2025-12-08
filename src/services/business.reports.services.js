@@ -11,42 +11,6 @@ import {
   EmployeePromotionHistory,
 } from "../models/AllModels.js";
 
-//   1: [
-//     "JavaScript",
-//     "Node.js",
-//     "React",
-//     "MongoDB",
-//     "API Development",
-//     "Git",
-//     "DevOps Basics",
-//     "Unit Testing",
-//   ],
-//   2: [
-//     "SEO",
-//     "Content Writing",
-//     "Social Media Marketing",
-//     "Google Analytics",
-//     "Email Marketing",
-//     "Brand Strategy",
-//     "Copywriting",
-//   ],
-//   3: [
-//     "Recruitment",
-//     "Employee Relations",
-//     "Onboarding",
-//     "Payroll Processing",
-//     "Compliance",
-//     "Performance Management",
-//   ],
-//   4: [
-//     "Budgeting",
-//     "Accounting",
-//     "Financial Reporting",
-//     "Excel",
-//     "Forecasting",
-//     "Risk Management",
-//   ],
-// };
 
 //Monthly Reports
 export const getNewHires = async () => {
