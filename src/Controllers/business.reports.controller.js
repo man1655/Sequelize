@@ -3,7 +3,7 @@
 
 // import { bonusEligibility, departmentChange, getDepartures, getNewHires, getSalaryChnages, mostCommnSkiil, mostRareSkill, promotionRecomondation, salaryBand, skillsGapDepartment } from "../services/business.reports.services.js";
 
-import {getNewHires,getDepartures,getSalaryChnages,departmentChange} from '../services/business.reports.services.js';
+import {getNewHires,getDepartures,getSalaryChnages,departmentChange,mostCommnSkiil, mostRareSkill,skillsGapDepartment} from '../services/business.reports.services.js';
 
 export const newHiresController = async (req, res) => {
   try {
@@ -86,63 +86,63 @@ export const departmentChangeController = async (req, res) => {
 
 
 
-// export const commonskill = async (req, res) => {
-//   try {
-//     const data = await mostCommnSkiil();
+export const commonskill = async (req, res) => {
+  try {
+    const data = await mostCommnSkiil();
 
-//     return res.status(200).json({
-//       success: true,
-//       count: data.length,
-//       data
-//     });
+    return res.status(200).json({
+      success: true,
+      count: data.length,
+      data
+    });
 
-//   } catch (err) {
-//     console.error("Error in departmentChangeController:", err);
-//     return res.status(500).json({
-//       success: false,
-//       message: "Failed to fetch department change report",
-//     });
-//   }
-// };
+  } catch (err) {
+    console.error("Error in departmentChangeController:", err);
+    return res.status(500).json({
+      success: false,
+      message: "Failed to fetch department change report",
+    });
+  }
+};
 
-// export const rareSkill=async(req,res)=>{
-//   try {
-//     const data = await mostRareSkill();
+export const rareSkill=async(req,res)=>{
+  try {
+    const data = await mostRareSkill();
 
-//     return res.status(200).json({
-//       success: true,
-//       count: data.length,
-//       data
-//     });
+    return res.status(200).json({
+      success: true,
+      count: data.length,
+      data
+    });
 
-//   } catch (err) {
-//     console.error("Error in departmentChangeController:", err);
-//     return res.status(500).json({
-//       success: false,
-//       message: "Failed to fetch department change report",
-//     });
-//   }
-// }
+  } catch (err) {
+    console.error("Error in departmentChangeController:", err);
+    return res.status(500).json({
+      success: false,
+      message: "Failed to fetch department change report",
+    });
+  }
+}
 
 
-// export const skillsGap=async(req,res)=>{
-//   try {
-//     const data = await skillsGapDepartment();
+export const skillsGap=async(req,res)=>{
+  try {
+    const data = await skillsGapDepartment();
 
-//     return res.status(200).json({
-//       success: true,
-//       count: data.length,
-//       data
-//     });
+    return res.status(200).json({
+      success: true,
+      count: data.length,
+      data
+    });
 
-//   } catch (err) {
-//     console.error("Error in departmentChangeController:", err);
-//     return res.status(500).json({
-//       success: false,
-//       message: "Failed to fetch department change report",
-//     });
-//   }
-// }
+  } catch (err) {
+    console.error("Error in departmentChangeController:", err);
+    return res.status(500).json({
+      success: false,
+      message: "Failed to fetch department change report",
+    });
+  }
+}
 
 
 // export const employeeSalaryBan=async(req,res)=>{

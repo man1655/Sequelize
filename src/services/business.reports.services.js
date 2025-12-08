@@ -5,6 +5,9 @@ import {
   Employee,
   EmployeeDepartmentHistory,
   EmployeeSalaryHistory,
+  EmployeeSkill,
+  DepartmentRequiredSkill,
+  sequelize
 } from "../models/AllModels.js";
 
 //   1: [
@@ -168,122 +171,67 @@ export const departmentChange = async () => {
 
 
 // //skills-inventory
-// export const mostCommnSkiil = async () => {
-//   try {
-//     return Employee.aggregate([
-//       { $unwind: "$skills" },
-//       {
-//         $group: {
-//           _id: "$skills",
-//           count: { $sum: 1 },
-//         },
-//       },
-//       {
-//         $sort: {
-//           count: -1,
-//         },
-//       },
-//       {
-//         $limit: 3,
-//       },
-//       {
-//         $project: {
-//           _id: 0,
-//           skill: "$_id",
-//           count: 1,
-//         },
-//       },
-//     ]);
-//   } catch (ex) {
-//     console.log(ex);
-//   }
-// };
+export const mostCommnSkiil = async () => {
+  try {
+    const data=await EmployeeSkill.findAll({
+      attributes:[
+        'skill',
+        [sequelize.fn('COUNT',sequelize.col('skill')),'count']
+      ],
+      group:['skill'],
+      order:[['count','DESC']], 
+      limit:3  
+    })
+    return data;
+  } catch (ex) {
+    console.log(ex);
+  }
+};
 
-// export const mostRareSkill = async () => {
-//   try {
-//     return Employee.aggregate([
-//       { $unwind: "$skills" },
-//       {
-//         $group: {
-//           _id: "$skills",
-//           count: { $sum: 1 },
-//         },
-//       },
-//       {
-//         $sort: {
-//           count: 1,
-//         },
-//       },
-//       {
-//         $limit: 3,
-//       },
-//       {
-//         $project: {
-//           _id: 0,
-//           skill: "$_id",
-//           count: 1,
-//         },
-//       },
-//     ]);
-//   } catch (exception) {
-//     console.log(exception);
-//   }
-// };
+export const mostRareSkill = async () => {
+  try {
+    const data=await EmployeeSkill.findAll({
+      attributes:[
+        'skill',
+        [sequelize.fn('COUNT',sequelize.col('skill')),'count']
+      ],
+      group:['skill'],
+      order:[['count','ASC']], 
+      limit:3  
+    })
+    return data;
+    
+  } catch (exception) {
+    console.log(exception);
+  }
+};
 
-// export const skillsGapDepartment = async () => {
-//   try {
-//     return Employee.aggregate([
-//       {
-//         $unwind: "$skills",
-//       },
-//       {
-//         $group: {
-//           _id: "$department_id",
-//           skills: { $addToSet: "$skills" },
-//         },
-//       },
-//       {
-//         $addFields: {
-//           requiredSkills: {
-//             $switch: {
-//               branches: [
-//                 {
-//                   case: { $eq: ["$_id", 1] },
-//                   then: requiredSkills[1],
-//                 },
-//                 {
-//                   case: { $eq: ["$_id", 2] },
-//                   then: requiredSkills[2],
-//                 },
-//                 {
-//                   case: { $eq: ["$_id", 3] },
-//                   then: requiredSkills[3],
-//                 },
-//                 {
-//                   case: { $eq: ["$_id", 4] },
-//                   then: requiredSkills[4],
-//                 },
-//               ],
-//               default: [],
-//             },
-//           },
-//         },
-//       },
-//       {
-//         $project: {
-//           _id: 0,
-//           department_id: "$_id",
-//           skills: 1,
-//           missingFeilds: {
-//             $setDifference: ["$requiredSkills", "$skills"],
-//           },
-//         },
-//       },
-//     ]);
-//   } catch (exception) {
-//     console.log(exception);
-//   }
-// };
+export const skillsGapDepartment = async () => {
+  try {
+    const requiredSkills = await DepartmentRequiredSkill.findAll({
+      attributes: ['department_id', 'skill'],
+      raw: true
+    });
+
+    const employeeSkills = await EmployeeSkill.findAll({
+      attributes: ['employee_id', 'skill'],
+      include: [{
+        model: Employee,
+        attributes: ['department_id']
+      }],
+      raw: true
+    });
+
+    const gap = requiredSkills.filter(req => 
+      !employeeSkills.some(emp => emp['Employee.department_id'] === req.department_id && emp.skill === req.skill)
+    );
+
+    return gap;
+  } catch (err) {
+    console.error(err);
+    return [];
+  }
+};
 
 // //Compensation Analysis
 
