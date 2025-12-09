@@ -1,16 +1,24 @@
-// import express from 'express'
+import express from 'express'
+import { departmentDistribution, getBudgetUtilizationReport ,highestLoad, underutilized} from '../Controllers/aggregation.controller.js';
 // import { departmentDistribution, getBudgetUtilizationReport, getCareerProgression, highestLoad, underutilized } from '../Controllers/aggregation.controller.js';
 
-// const Router=express.Router();
 
-// Router.get('/budget-utilization', getBudgetUtilizationReport)
+const Router=express.Router();
 
-// Router.get('/highest-load',highestLoad)
 
-// Router.get('/underutilized',underutilized)
 
-// Router.get('/department-distribution',departmentDistribution)
+
+Router.get('/budget-utilization', getBudgetUtilizationReport)
+
+
+
+Router.get('/highest-load',highestLoad)
+
+Router.get('/underutilized',underutilized)
+
+Router.get('/department-distribution',departmentDistribution)
+
 
 // Router.get("/career-progression", getCareerProgression);
 
-// export default Router;
+export default Router;

@@ -1,171 +1,152 @@
-// import { Department } from "../models/Department.model.js";
-// import { Employee } from "../models/Employee.model.js";
+import { literal, Sequelize } from "sequelize";
+import { Department, Employee, Project, ProjectAssignment, sequelize } from "../models/AllModels.js";
 
-// export const departmentBudgetUtilization = () => {
-//   return Department.aggregate([
+
+export const departmentBudgetUtilization = async () => {
+  return await Department.findAll({
+    attributes: [
+      "department_id",
+      "name",
+      // Total Salary
+      [
+        Sequelize.fn("COALESCE", Sequelize.fn("SUM", Sequelize.col("Employees.salary")), 0),
+        "totalSalary"
+      ],  
+      // Utilization %
+      [
+        Sequelize.literal(`
+          COALESCE(
+            ROUND( (SUM("Employees"."salary") / "Department"."budget") * 100, 2 ),
+            0
+          )
+        `),
+        "utilizationPercentage"
+      ],
+      // Budget Status
+      [
+        Sequelize.literal(`
+          CASE 
+            WHEN SUM("Employees"."salary") > "Department"."budget"
+              THEN 'OVER BUDGET'
+            ELSE 'UNDER BUDGET'
+          END
+        `),
+        "budgetStatus"
+      ]
+    ],
+    include: [
+      {
+        model: Employee,
+        as: "Employees",
+        attributes: []
+      }
+    ],
+    group: ["Department.department_id", "Department.name"],
+    raw: true
+  });
+};
+
+
+
+// highest project load
+// 
+export const getEmployeesWithHighestLoad = async () => {
+  return await Employee.findAll({
+    attributes: [
+      'employee_id',
+      'name',
+      [sequelize.fn('COUNT', sequelize.col('Projects.project_id')), 'projectcount']
+    ],
+    include: [
+      {
+        model: Project,
+        attributes: [],
+        through: { attributes: [] }
+      }
+    ],
+    group: ['Employee.employee_id', 'Employee.name'],
+    order: [[sequelize.literal('"projectcount"'), 'DESC']], // <- use quotes
+    raw: true
+  });
+};
+
+// Lowest project load
+
+
+export const getUnderutilizedEmployees = async () => {
+  return await Employee.findAll({
+    attributes:[
+      'employee_id',
+      'name',
+      [sequelize.fn('COUNT', sequelize.col('Projects.project_id')),'ProjectCount']
+    ],
+    include:[
+      {
+        model:Project,
+        attributes:[],
+        through:{attributes:[]}
+      }
+    ],
+    group:['Employee.employee_id','Employee.name'],
+    order:[[sequelize.literal('"ProjectCount"'),'ASC']]
+  })
+};
+
+export const getDepartmentResourceDistribution = async () => {
+
+ //DEPARTMENT-NAME
+ //EMPLOYEE_SALARY
+ //PROJECT-COUNT
+ //TOTAL-EMPLOYEE
+ 
+//  return await Department.findAll({
+//   attributes:[
+//     'department_id',
+//     'name',
+//     [sequelize.fn('COUNT',sequelize.col('Employees.employee_id')),'Total_Employees'],
+//     [sequelize.fn('SUM',sequelize.col('Employees.salary')),'Total_Salary'],
+//     [sequelize.fn('COUNT',sequelize.col('Projects.project_id')),'Project_Count']
+//   ],
+//   include:[
 //     {
-//       $lookup: {
-//         from: "employees",
-//         localField: "department_id",
-//         foreignField: "department_id",
-//         as: "employees",
-//       },
+//       model:Employee,
+//       attributes:[],
 //     },
 //     {
-//       $addFields: {
-//         totalSalary: { $sum: "$employees.salary" },
-//       },
-//     },
-//     {
-//       $addFields: {
-//         utilizationPercent: {
-//           $cond: [
-//             { $gt: ["$budget", 0] },
-//             {
-//               $round: [
-//                 {
-//                   $multiply: [{ $divide: ["$totalSalary", "$budget"] }, 100],
-//                 },
-//                 2,
-//               ],
-//             },
-//             0,
-//           ],
-//         },
-//         budgetStatus: {
-//           $cond: [
-//             { $gt: ["$totalSalary", "$budget"] },
-//             "Over Budget",
-//             "Under Budger",
-//           ],
-//         },
-//       },
-//     },
+//       model:Project,
+//       attributes:[],
+      
+//     }
+//   ],
+//   group:['Department.department_id','Department.name']
+//  })
 
-//     {
-//       $project: {
-//         _id: 0,
-//         department_id: 1,
-//         department_name: "$name",
-//         budget: 1,
-//         totalSalary: 1,
-//         utilizationPercent: 1,
-//         budgetStatus: 1,
-//       },
-//     },
-//     { $sort: { utilizationPercent: -1 } },
-//   ]);
-// };
 
-// export const getEmployeesWithHighestLoad = async ({
-//   limit = 10,
-//   includeInactive = false,
-// } = {}) => {
-//   const matchStage = includeInactive ? {} : { status: "active" };
+return await Department.findAll({
+  attributes: [
+    'department_id',
+    'name',
+    [sequelize.literal(`(
+      SELECT COUNT(*)
+      FROM employees e
+      WHERE e.department_id = "Department".department_id
+    )`), 'Total_Employees'],
+    [sequelize.literal(`(
+      SELECT SUM(salary)
+      FROM employees e
+      WHERE e.department_id = "Department".department_id
+    )`), 'Total_Salary'],
+    [sequelize.literal(`(
+      SELECT COUNT(*)
+      FROM projects p
+      WHERE p.department_id = "Department".department_id
+    )`), 'Project_Count']
+  ],
+  raw: true
+});
+  
 
-//   const pipeline = [
-//     { $match: matchStage },
-//     {
-//       $project: {
-//         employee_id: 1,
-//         name: 1,
-//         department_id: 1,
-//         position: 1,
-//         performance_score: 1,
-//         projectCount: { $size: { $ifNull: ["$projects", []] } },
-//       },
-//     },
-//     { $sort: { projectCount: -1, performance_score: -1 } },
-//     { $limit: parseInt(limit, 10) },
-//   ];
-
-//   return Employee.aggregate(pipeline).exec();
-// };
-
-// export const getUnderutilizedEmployees = async ({
-//   threshold = 1,
-//   includeInactive = false,
-// } = {}) => {
-//   const matchStatus = includeInactive ? {} : { status: "active" };
-
-//   const pipeline = [
-//     { $match: matchStatus },
-//     {
-//       $project: {
-//         employee_id: 1,
-//         name: 1,
-//         department_id: 1,
-//         position: 1,
-//         performance_score: 1,
-//         projectCount: { $size: { $ifNull: ["$projects", []] } },
-//       },
-//     },
-//     { $match: { projectCount: { $lte: parseInt(threshold, 1) } } },
-//     { $sort: { projectCount: 1, performance_score: -1, name: 1 } },
-//   ];
-
-//   return Employee.aggregate(pipeline).exec();
-// };
-
-// export const getDepartmentResourceDistribution = async ({
-//   includeInactive = false,
-// } = {}) => {
-//   const matchStatus = includeInactive ? {} : { status: "active" };
-
-//   const pipeline = [
-//     { $match: matchStatus },
-//     {
-//       $project: {
-//         department_id: 1,
-//         position: 1,
-//         projectCount: { $size: { $ifNull: ["$projects", []] } },
-//       },
-//     },
-
-//     {
-//       $group: {
-//         _id: { dept: "$department_id", position: "$position" },
-//         positionCount: { $sum: 1 },
-//         totalProjectsForPosition: { $sum: "$projectCount" },
-//       },
-//     },
-//     {
-//       $group: {
-//         _id: "$_id.dept",
-//         employeeCount: { $sum: "$positionCount" },
-//         totalProjects: { $sum: "$totalProjectsForPosition" },
-//         positions: {
-//           $push: {
-//             position: "$_id.position",
-//             count: "$positionCount",
-//           },
-//         },
-//       },
-//     },
-//     {
-//       $addFields: {
-//         avgProjectsPerEmployee: {
-//           $cond: [
-//             { $gt: ["$employeeCount", 0] },
-//             { $divide: ["$totalProjects", "$employeeCount"] },
-//             0,
-//           ],
-//         },
-//       },
-//     },
-//     { $sort: { _id: 1 } },
-//   ];
-
-//   const raw = await Employee.aggregate(pipeline).exec();
-
-//   return raw.map((d) => ({
-//     department_id: d._id,
-//     employeeCount: d.employeeCount,
-//     totalProjects: d.totalProjects,
-//     avgProjectsPerEmployee: Number(d.avgProjectsPerEmployee.toFixed(2)),
-//     positionBreakdown: d.positions,
-//   }));
-// };
+};
 
 // // 3.2 Career Progression
 // export const averagePromotionTimeService = async () => {
