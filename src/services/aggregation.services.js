@@ -1,5 +1,5 @@
 import { literal, Sequelize } from "sequelize";
-import { Department, Employee, Project, ProjectAssignment, sequelize } from "../models/AllModels.js";
+import { Department, Employee, EmployeePromotionHistory, Project, ProjectAssignment, sequelize } from "../models/AllModels.js";
 
 
 export const departmentBudgetUtilization = async () => {
@@ -46,8 +46,6 @@ export const departmentBudgetUtilization = async () => {
   });
 };
 
-
-
 // highest project load
 // 
 export const getEmployeesWithHighestLoad = async () => {
@@ -71,8 +69,6 @@ export const getEmployeesWithHighestLoad = async () => {
 };
 
 // Lowest project load
-
-
 export const getUnderutilizedEmployees = async () => {
   return await Employee.findAll({
     attributes:[
@@ -144,158 +140,81 @@ return await Department.findAll({
   ],
   raw: true
 });
-  
-
 };
 
-// // 3.2 Career Progression
-// export const averagePromotionTimeService = async () => {
-//   const pipeline = [
-//     { $match: { "promotion_history.1": { $exists: true } } },
-//     {
-//       $project: {
-//         promotion_history: {
-//           $map: {
-//             input: { $range: [1, { $size: "$promotion_history" }] },
-//             as: "i",
-//             in: {
-//               $divide: [
-//                 {
-//                   $subtract: [
-//                     {
-//                       $toDate: {
-//                         $arrayElemAt: ["$promotion_history.date", "$$i"],
-//                       },
-//                     },
-//                     {
-//                       $toDate: {
-//                         $arrayElemAt: [
-//                           "$promotion_history.date",
-//                           { $subtract: ["$$i", 1] },
-//                         ],
-//                       },
-//                     },
-//                   ],
-//                 },
-//                 1000 * 60 * 60 * 24, // convert ms to days
-//               ],
-//             },
-//           },
-//         },
-//       },
-//     },
-//     { $unwind: "$promotion_history" },
-//     { $group: { _id: null, avgDays: { $avg: "$promotion_history" } } },
-//   ];
+// 3.2 Career Progression
+export const averagePromotionTimeService = async () => {
+  return await sequelize.query(`
+    SELECT 
+        eph1.employee_id,
+        e.name,
+        AVG(
+          DATE_PART('day', eph2.change_date::timestamp - eph1.change_date::timestamp)
+        ) AS avg_days_between_promotions
+    FROM employee_promotion_history eph1
+    JOIN employee_promotion_history eph2
+        ON eph1.employee_id = eph2.employee_id
+        AND eph2.change_date = (
+            SELECT MIN(eph3.change_date)
+            FROM employee_promotion_history eph3
+            WHERE eph3.employee_id = eph1.employee_id
+            AND eph3.change_date > eph1.change_date
+        )
+    JOIN employees e 
+        ON e.employee_id = eph1.employee_id
+    GROUP BY eph1.employee_id, e.name
+    ORDER BY avg_days_between_promotions ASC;
+  `, {
+    type: sequelize.QueryTypes.SELECT
+  });
+};
 
-//   const [result] = await Employee.aggregate(pipeline).exec();
+export const commonCareerPathsService = async () => {
+  return await EmployeePromotionHistory.findAll({
+    attributes: [
+      'employee_id',
+      [
+        sequelize.fn(
+          'STRING_AGG',
+          sequelize.col('position'),
+          ' → '  
+        ),
+        'career_path'
+      ]
+    ],
+    group: ['employee_id'],
+    order: ['employee_id'],
+    raw: true
+  });
+ 
+};
 
-//   const avgDays = result?.avgDays || 0;
+export const skillProgressionCorrelationService = async () => {
+  const query = `
+    SELECT 
+        s.skill,
+        AVG(
+            DATE_PART(
+              'day',
+              eph2.change_date::timestamp - eph1.change_date::timestamp
+            )
+        ) AS avg_days_between_promotions
+    FROM employee_promotion_history eph1
+    JOIN employee_promotion_history eph2
+        ON eph1.employee_id = eph2.employee_id
+       AND eph2.change_date = (
+            SELECT MIN(eph3.change_date)
+            FROM employee_promotion_history eph3
+            WHERE eph3.employee_id = eph1.employee_id
+              AND eph3.change_date > eph1.change_date
+        )
+    JOIN employee_skills s
+        ON s.employee_id = eph1.employee_id
+    GROUP BY s.skill
+    ORDER BY avg_days_between_promotions;
+  `;
 
-//   return {
-//     averagePromotionDays: avgDays,
-//     averagePromotionYears: (avgDays / 365).toFixed(2),
-//   };
-// };
-
-// export const commonCareerPathsService = async () => {
-//   const pipeline = [
-//     {
-//       $project: {
-//         path: {
-//           $map: { input: "$promotion_history", as: "p", in: "$$p.position" },
-//         },
-//       },
-//     },
-//     {
-//       $project: {
-//         pathString: {
-//           $reduce: {
-//             input: "$path",
-//             initialValue: "",
-//             in: {
-//               $concat: [
-//                 {
-//                   $cond: [
-//                     { $eq: ["$$value", ""] },
-//                     "",
-//                     { $concat: ["$$value", " → "] },
-//                   ],
-//                 },
-//                 "$$this",
-//               ],
-//             },
-//           },
-//         },
-//       },
-//     },
-//     { $group: { _id: "$pathString", count: { $sum: 1 } } },
-//   ];
-
-//   const result = await Employee.aggregate(pipeline).exec();
-
-//   return result.reduce((acc, r) => {
-//     acc[r._id] = r.count;
-//     return acc;
-//   }, {});
-// };
-
-// export const skillProgressionCorrelationService = async () => {
-//   const pipeline = [
-//     { $match: { "promotion_history.1": { $exists: true } } },
-//     {
-//       $project: {
-//         skills: 1,
-//         promotionDiffs: {
-//           $map: {
-//             input: { $range: [1, { $size: "$promotion_history" }] },
-//             as: "i",
-//             in: {
-//               $divide: [
-//                 {
-//                   $subtract: [
-//                     {
-//                       $toDate: {
-//                         $arrayElemAt: ["$promotion_history.date", "$$i"],
-//                       },
-//                     },
-//                     {
-//                       $toDate: {
-//                         $arrayElemAt: [
-//                           "$promotion_history.date",
-//                           { $subtract: ["$$i", 1] },
-//                         ],
-//                       },
-//                     },
-//                   ],
-//                 },
-//                 1000 * 60 * 60 * 24, // ms → days
-//               ],
-//             },
-//           },
-//         },
-//       },
-//     },
-//     {
-//       $addFields: {
-//         avgPromotionDays: { $avg: "$promotionDiffs" },
-//       },
-//     },
-//     { $unwind: "$skills" },
-//     { $group: { _id: "$skills", avgDays: { $avg: "$avgPromotionDays" } } },
-//     {
-//       $project: {
-//         _id: 0,
-//         skill: "$_id",
-//         avgYears: { $divide: ["$avgDays", 365] },
-//       },
-//     },
-//   ];
-
-//   const raw = await Employee.aggregate(pipeline).exec();
-
-//   return raw.reduce((acc, r) => {
-//     acc[r.skill] = r.avgYears.toFixed(2);
-//     return acc;
-//   }, {});
-// };
+  return await sequelize.query(query, {
+    type: sequelize.QueryTypes.SELECT
+  });
+};

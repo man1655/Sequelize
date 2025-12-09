@@ -1,6 +1,6 @@
 // import { averagePromotionTimeService,  commonCareerPathsService, departmentBudgetUtilization, getDepartmentResourceDistribution, getEmployeesWithHighestLoad, getUnderutilizedEmployees,  skillProgressionCorrelationService } from "../services/aggregation.services.js";
 
-import { departmentBudgetUtilization,getDepartmentResourceDistribution,getEmployeesWithHighestLoad, getUnderutilizedEmployees} from "../services/aggregation.services.js";
+import { averagePromotionTimeService, commonCareerPathsService, departmentBudgetUtilization,getDepartmentResourceDistribution,getEmployeesWithHighestLoad, getUnderutilizedEmployees, skillProgressionCorrelationService} from "../services/aggregation.services.js";
 
 export const getBudgetUtilizationReport = async (req, res) => {
   try {
@@ -30,7 +30,6 @@ export const underutilized = async (req, res) => {
     
     const data = await getUnderutilizedEmployees();
     const data1=data.slice(0,3);
-
     return res.json({ success: true, data1 });
   } catch (err) {
     console.error("underutilized error:", err);
@@ -52,16 +51,15 @@ export const departmentDistribution = async (req, res) => {
 };
 
 
-// export const getCareerProgression = async (req, res) => {
-// try {
-// const avgPromotion = await averagePromotionTimeService();
-// const commonPaths = await commonCareerPathsService();
-// const skillsCorrelation = await skillProgressionCorrelationService();
+export const getCareerProgression = async (req, res) => {
+try {
+const avgPromotion = await averagePromotionTimeService();
+const commonPaths = await commonCareerPathsService();
+const skillsCorrelation = await skillProgressionCorrelationService();
 
-
-// res.json({ success: true, data: { avgPromotion, commonPaths, skillsCorrelation } });
-// } catch (err) {
-// res.status(500).json({ success: false, error: err.message });
-// }
-// };
+res.json({ success: true, data: { avgPromotion ,commonPaths,skillsCorrelation} });
+} catch (err) {
+res.status(500).json({ success: false, error: err.message });
+}
+};
 
