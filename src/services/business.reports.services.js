@@ -90,7 +90,8 @@ export const getSalaryChnages = async () => {
           required: true,
         },
       ],
-      order: [[EmployeeSalaryHistory, "date", "DESC"]], // latest first
+      order: [[EmployeeSalaryHistory, "date", "DESC"]],
+      limit:1 // latest first
     });
 
     return data;
@@ -174,6 +175,7 @@ export const skillsGapDepartment = async () => {
     });
 
     const employeeSkills = await EmployeeSkill.findAll({
+      
       attributes: ["employee_id", "skill"],
       include: [
         {
@@ -221,11 +223,17 @@ export const salaryBand = async () => {
   }
 };
 
+
 export const bonusEligibility = async () => {
   try {
     const data = await Employee.findAll({
-      attributes: ["employee_id", "name", "position", "salary"],
-      where: literal(`CURRENT_DATE - "hire_date" > 180`),
+      attributes: ["employee_id", "name", "position", "salary", "performance_score"],
+      where: {
+        [Op.and]: [
+          literal(`CURRENT_DATE - "hire_date" > 180`),
+          { performance_score: { [Op.gt]: 8 } }
+        ]
+      }
     });
     return data;
   } catch (err) {
@@ -233,6 +241,7 @@ export const bonusEligibility = async () => {
     return [];
   }
 };
+
 export const promotionRecommendation = async () => {
   try {
     const data = await Employee.findAll({
@@ -264,7 +273,7 @@ export const promotionRecommendation = async () => {
         {
           model: EmployeePromotionHistory,
           attributes: [], //
-          required: false, // LEFT JOIN
+          required: false, // 
         }
       ],
       where: {
