@@ -1,43 +1,29 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { DollarSign, Award, TrendingUp, ArrowLeft, RefreshCw, Trophy, Star, Clock, AlertCircle } from 'lucide-react';
 import { useNavigate } from 'react-router-dom'; 
-
+import { useDispatch,useSelector} from 'react-redux';
+import { fetchBonus, fetchPromotion, fetchSalaryBand } from '../Features/SkillInventory/DepartmentSlice';
 const ProjectAllocation = () => {
   const [activeTab, setActiveTab] = useState('salary');
     const navigate=useNavigate();
-  
+    const dispatch=useDispatch();
+    const {salaryBand}=useSelector((state)=>state.Department);
+    const {Bonus}=useSelector((state)=>state.Department);
+    const {Promotion}=useSelector((state)=>state.Department);
 
+
+    useEffect(()=>{
+      dispatch(fetchSalaryBand());
+      dispatch(fetchBonus());
+      dispatch(fetchPromotion())
+    },[dispatch])
   // Sample data - replace with your API data
-  const [data, setData] = useState({
-    salaryBands: [
-      { Position: 'Senior Software Engineer', Total_Salary: 850000, Average_Salary: 95000, Minimum_Salary: 85000, Maximum_Salary: 110000, count: 9 },
-      { Position: 'Product Manager', Total_Salary: 720000, Average_Salary: 90000, Minimum_Salary: 80000, Maximum_Salary: 105000, count: 8 },
-      { Position: 'Software Engineer', Total_Salary: 650000, Average_Salary: 72000, Minimum_Salary: 65000, Maximum_Salary: 85000, count: 9 },
-      { Position: 'Sales Manager', Total_Salary: 540000, Average_Salary: 90000, Minimum_Salary: 85000, Maximum_Salary: 95000, count: 6 },
-      { Position: 'Marketing Specialist', Total_Salary: 420000, Average_Salary: 60000, Minimum_Salary: 55000, Maximum_Salary: 68000, count: 7 },
-      { Position: 'HR Specialist', Total_Salary: 360000, Average_Salary: 60000, Minimum_Salary: 55000, Maximum_Salary: 65000, count: 6 },
-      { Position: 'Data Analyst', Total_Salary: 340000, Average_Salary: 68000, Minimum_Salary: 62000, Maximum_Salary: 75000, count: 5 }
-    ],
-    bonusEligibility: [
-      { employee_id: 1001, name: 'Sarah Johnson', position: 'Senior Software Engineer', department_id: 1, salary: 105000, performance_score: 9.5, hire_date: '2023-01-15' },
-      { employee_id: 1002, name: 'Michael Chen', position: 'Product Manager', department_id: 1, salary: 98000, performance_score: 9.2, hire_date: '2023-02-20' },
-      { employee_id: 1003, name: 'Emily Davis', position: 'Sales Manager', department_id: 2, salary: 92000, performance_score: 9.8, hire_date: '2023-03-10' },
-      { employee_id: 1004, name: 'James Wilson', position: 'Senior Software Engineer', department_id: 1, salary: 110000, performance_score: 9.4, hire_date: '2023-01-25' },
-      { employee_id: 1005, name: 'Lisa Anderson', position: 'Data Analyst', department_id: 3, salary: 72000, performance_score: 9.1, hire_date: '2023-04-05' }
-    ],
-    promotionRecommendations: [
-      { Employee_ID: 2001, Employee_Name: 'David Martinez', Position: 'Software Engineer', Salary: 78000, Last_Promotion_Date: '2022-06-15' },
-      { Employee_ID: 2002, Employee_Name: 'Jessica Brown', Position: 'Marketing Specialist', Salary: 62000, Last_Promotion_Date: '2022-08-20' },
-      { Employee_ID: 2003, Employee_Name: 'Chris Lee', Position: 'Software Engineer', Salary: 75000, Last_Promotion_Date: '2022-09-10' },
-      { Employee_ID: 2004, Employee_Name: 'Amanda Taylor', Position: 'Sales Representative', Salary: 58000, Last_Promotion_Date: null },
-      { Employee_ID: 2005, Employee_Name: 'Robert Garcia', Position: 'Data Analyst', Salary: 68000, Last_Promotion_Date: '2022-07-25' }
-    ]
-  });
+ 
 
   const formatCurrency = (amount) => {
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
-      currency: 'USD',
+      currency: 'IND',
       minimumFractionDigits: 0
     }).format(amount);
   };
@@ -66,17 +52,7 @@ const ProjectAllocation = () => {
     return 'bg-yellow-900 text-yellow-300 border-yellow-700';
   };
 
-  const getDepartmentName = (id) => {
-    const departments = {
-      1: 'Engineering',
-      2: 'Sales',
-      3: 'Marketing',
-      4: 'HR',
-      5: 'Finance'
-    };
-    return departments[id] || 'Unknown';
-  };
-
+  
   return (
     <div className="min-h-screen bg-slate-900">
       {/* Header */}
@@ -108,7 +84,7 @@ const ProjectAllocation = () => {
               <DollarSign className="w-8 h-8 text-white" />
               <span className="text-white text-sm font-medium">Salary Bands</span>
             </div>
-            <p className="text-3xl font-bold text-white">{data.salaryBands.length}</p>
+            <p className="text-3xl font-bold text-white">{salaryBand.length}</p>
             <p className="text-blue-200 text-sm mt-1">Position levels</p>
           </div>
           
@@ -117,7 +93,7 @@ const ProjectAllocation = () => {
               <Trophy className="w-8 h-8 text-white" />
               <span className="text-white text-sm font-medium">Bonus Eligible</span>
             </div>
-            <p className="text-3xl font-bold text-white">{data.bonusEligibility.length}</p>
+            <p className="text-3xl font-bold text-white">{Bonus.length}</p>
             <p className="text-green-200 text-sm mt-1">High performers</p>
           </div>
           
@@ -126,7 +102,7 @@ const ProjectAllocation = () => {
               <TrendingUp className="w-8 h-8 text-white" />
               <span className="text-white text-sm font-medium">Promotions Due</span>
             </div>
-            <p className="text-3xl font-bold text-white">{data.promotionRecommendations.length}</p>
+            <p className="text-3xl font-bold text-white">{Promotion.length}</p>
             <p className="text-purple-200 text-sm mt-1">Ready for advancement</p>
           </div>
         </div>
@@ -143,7 +119,7 @@ const ProjectAllocation = () => {
               }`}
             >
               <DollarSign className="w-4 h-4" />
-              <span>Salary Bands ({data.salaryBands.length})</span>
+              <span>Salary Bands ({salaryBand.length})</span>
             </button>
             <button
               onClick={() => setActiveTab('bonus')}
@@ -154,7 +130,7 @@ const ProjectAllocation = () => {
               }`}
             >
               <Trophy className="w-4 h-4" />
-              <span>Bonus Eligibility ({data.bonusEligibility.length})</span>
+              <span>Bonus Eligibility ({Bonus.length})</span>
             </button>
             <button
               onClick={() => setActiveTab('promotion')}
@@ -165,7 +141,7 @@ const ProjectAllocation = () => {
               }`}
             >
               <TrendingUp className="w-4 h-4" />
-              <span>Promotion Recommendations ({data.promotionRecommendations.length})</span>
+              <span>Promotion Recommendations ({Promotion.length})</span>
             </button>
           </div>
         </div>
@@ -180,7 +156,6 @@ const ProjectAllocation = () => {
                 <thead className="bg-slate-750">
                   <tr>
                     <th className="px-6 py-4 text-left text-xs font-medium text-slate-400 uppercase">Position</th>
-                    <th className="px-6 py-4 text-left text-xs font-medium text-slate-400 uppercase">Total Salary</th>
                     <th className="px-6 py-4 text-left text-xs font-medium text-slate-400 uppercase">Average Salary</th>
                     <th className="px-6 py-4 text-left text-xs font-medium text-slate-400 uppercase">Min Salary</th>
                     <th className="px-6 py-4 text-left text-xs font-medium text-slate-400 uppercase">Max Salary</th>
@@ -188,8 +163,8 @@ const ProjectAllocation = () => {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-700">
-                  {data.salaryBands.map((band, idx) => {
-                    const range = band.Maximum_Salary - band.Minimum_Salary;
+                  {salaryBand.map((band, idx) => {
+                    const range = band.max_salary - band.min_salary;
                     return (
                       <tr key={idx} className="hover:bg-slate-750 transition-colors">
                         <td className="px-6 py-4">
@@ -197,20 +172,20 @@ const ProjectAllocation = () => {
                             <div className="bg-blue-600 w-8 h-8 rounded-lg flex items-center justify-center">
                               <Award className="w-4 h-4 text-white" />
                             </div>
-                            <span className="text-white font-medium">{band.Position}</span>
+                            <span className="text-white font-medium">{band.position}</span>
                           </div>
                         </td>
-                        <td className="px-6 py-4 text-white font-semibold">{formatCurrency(band.Total_Salary)}</td>
-                        <td className="px-6 py-4 text-slate-300">{formatCurrency(band.Average_Salary)}</td>
-                        <td className="px-6 py-4 text-slate-300">{formatCurrency(band.Minimum_Salary)}</td>
-                        <td className="px-6 py-4 text-slate-300">{formatCurrency(band.Maximum_Salary)}</td>
+                        
+                        <td className="px-6 py-4 text-slate-300">{formatCurrency(band.avg_salary)}</td>
+                        <td className="px-6 py-4 text-slate-300">{formatCurrency(band.min_salary)}</td>
+                        <td className="px-6 py-4 text-slate-300">{formatCurrency(band.max_salary)}</td>
                         <td className="px-6 py-4">
                           <div className="space-y-1">
                             <span className="text-slate-400 text-sm">{formatCurrency(range)}</span>
                             <div className="w-full bg-slate-700 rounded-full h-2">
                               <div
                                 className="bg-blue-500 h-2 rounded-full"
-                                style={{ width: `${(range / band.Maximum_Salary) * 100}%` }}
+                                style={{ width: `{(range / band.Maximum_Salary) * 100}%` }}
                               />
                             </div>
                           </div>
@@ -232,14 +207,12 @@ const ProjectAllocation = () => {
                     <th className="px-6 py-4 text-left text-xs font-medium text-slate-400 uppercase">Employee ID</th>
                     <th className="px-6 py-4 text-left text-xs font-medium text-slate-400 uppercase">Name</th>
                     <th className="px-6 py-4 text-left text-xs font-medium text-slate-400 uppercase">Position</th>
-                    <th className="px-6 py-4 text-left text-xs font-medium text-slate-400 uppercase">Department</th>
                     <th className="px-6 py-4 text-left text-xs font-medium text-slate-400 uppercase">Salary</th>
                     <th className="px-6 py-4 text-left text-xs font-medium text-slate-400 uppercase">Performance</th>
-                    <th className="px-6 py-4 text-left text-xs font-medium text-slate-400 uppercase">Hire Date</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-700">
-                  {data.bonusEligibility.map((employee, idx) => (
+                  {Bonus.map((employee, idx) => (
                     <tr key={idx} className="hover:bg-slate-750 transition-colors">
                       <td className="px-6 py-4 text-sm text-slate-300">{employee.employee_id}</td>
                       <td className="px-6 py-4">
@@ -251,11 +224,7 @@ const ProjectAllocation = () => {
                         </div>
                       </td>
                       <td className="px-6 py-4 text-slate-300">{employee.position}</td>
-                      <td className="px-6 py-4">
-                        <span className="bg-green-900 text-green-300 px-3 py-1 rounded-full text-sm">
-                          {getDepartmentName(employee.department_id)}
-                        </span>
-                      </td>
+                      
                       <td className="px-6 py-4 text-white font-medium">{formatCurrency(employee.salary)}</td>
                       <td className="px-6 py-4">
                         <div className="flex items-center space-x-2">
@@ -265,7 +234,6 @@ const ProjectAllocation = () => {
                           </span>
                         </div>
                       </td>
-                      <td className="px-6 py-4 text-sm text-slate-300">{formatDate(employee.hire_date)}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -289,30 +257,30 @@ const ProjectAllocation = () => {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-700">
-                  {data.promotionRecommendations.map((employee, idx) => {
-                    const daysSince = employee.Last_Promotion_Date ? getDaysSince(employee.Last_Promotion_Date) : null;
-                    const isOverdue = !employee.Last_Promotion_Date || daysSince > 540;
+                  {Promotion.map((employee, idx) => {
+                    const daysSince = employee.last_promotion_date ? getDaysSince(employee.last_promotion_date) : null;
+                    const isOverdue = !employee.last_promotion_date || daysSince > 540;
                     return (
                       <tr key={idx} className="hover:bg-slate-750 transition-colors">
-                        <td className="px-6 py-4 text-sm text-slate-300">{employee.Employee_ID}</td>
+                        <td className="px-6 py-4 text-sm text-slate-300">{employee.employee_id}</td>
                         <td className="px-6 py-4">
                           <div className="flex items-center space-x-3">
                             <div className="bg-purple-600 w-8 h-8 rounded-full flex items-center justify-center">
-                              <span className="text-white text-sm font-medium">{employee.Employee_Name.charAt(0)}</span>
+                              <span className="text-white text-sm font-medium">{employee.name.charAt(0)}</span>
                             </div>
-                            <span className="text-white font-medium">{employee.Employee_Name}</span>
+                            <span className="text-white font-medium">{employee.name}</span>
                           </div>
                         </td>
-                        <td className="px-6 py-4 text-slate-300">{employee.Position}</td>
-                        <td className="px-6 py-4 text-white font-medium">{formatCurrency(employee.Salary)}</td>
+                        <td className="px-6 py-4 text-slate-300">{employee.position}</td>
+                        <td className="px-6 py-4 text-white font-medium">{formatCurrency(employee.salary)}</td>
                         <td className="px-6 py-4 text-sm text-slate-300">
-                          {formatDate(employee.Last_Promotion_Date)}
+                          {formatDate(employee.last_promotion_date)}
                         </td>
                         <td className="px-6 py-4">
                           {daysSince ? (
                             <span className="text-slate-400 text-sm">{daysSince} days</span>
                           ) : (
-                            <span className="text-slate-500 text-sm italic">N/A</span>
+                            <span className="text-slate-500 text-sm italic">Not Promoted</span>
                           )}
                         </td>
                         <td className="px-6 py-4">

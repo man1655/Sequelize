@@ -91,7 +91,7 @@ export const getSalaryChnages = async () => {
         },
       ],
       order: [[EmployeeSalaryHistory, "date", "DESC"]],
-      limit:1 // latest first
+      
     });
 
     return data;
@@ -142,7 +142,7 @@ export const mostCommnSkiil = async () => {
       ],
       group: ["skill"],
       order: [["count", "DESC"]],
-      limit: 3,
+      limit: 6,
     });
     return data;
   } catch (ex) {
