@@ -1,20 +1,23 @@
-import React, { useState } from 'react';
+import React, { useState ,useEffect} from 'react';
 import { Award, TrendingUp, AlertTriangle, ArrowLeft, RefreshCw, Users, Zap, Target, Search } from 'lucide-react';
 import { useNavigate } from 'react-router-dom'; 
+import { useDispatch,useSelector} from 'react-redux';
+import { fetchSalaryBand } from '../Features/Department/skillInventorySlice';
+
 
 const SkillInventory = () => {
   const [activeTab, setActiveTab] = useState('common');
     const navigate=useNavigate();
+    const dispatch=useDispatch();
+    
+  const {salaryBand=[]}=useSelector((state)=>state.Skill);
+
+  useEffect(()=>{
+        dispatch(fetchSalaryBand());    
+      },[dispatch])
   
   // Sample data - replace with your API data
   const [data, setData] = useState({
-    commonSkills: [
-      { skill: 'JavaScript', employee_count: 45 },
-      { skill: 'Python', employee_count: 38 },
-      { skill: 'React', employee_count: 32 },
-      { skill: 'SQL', employee_count: 28 },
-      { skill: 'Project Management', employee_count: 25 }
-    ],
     rareSkills: [
       { skill: 'Rust', employee_count: 2 },
       { skill: 'Blockchain Development', employee_count: 2 },
@@ -111,7 +114,7 @@ const SkillInventory = () => {
               <TrendingUp className="w-8 h-8 text-white" />
               <span className="text-white text-sm font-medium">Most Common</span>
             </div>
-            <p className="text-3xl font-bold text-white">{data.commonSkills.length}</p>
+            <p className="text-3xl font-bold text-white">{salaryBand.length}</p>
             <p className="text-blue-200 text-sm mt-1">Top skills in organization</p>
           </div>
           
@@ -184,9 +187,9 @@ const SkillInventory = () => {
                 <p className="text-slate-400 text-sm">Skills with the highest number of employees</p>
               </div>
               <div className="space-y-4">
-                {data.commonSkills.map((skill, idx) => {
-                  const level = getSkillLevel(skill.employee_count);
-                  const percentage = (skill.employee_count / data.commonSkills[0].employee_count) * 100;
+                {salaryBand.map((skill, idx) => {
+                  const level = getSkillLevel(skill.count);
+                  const percentage = (skill.count / salaryBand[0].count) * 100;
                   return (
                     <div key={idx} className="bg-slate-750 rounded-lg p-5 border border-slate-700 hover:border-slate-600 transition-colors">
                       <div className="flex items-center justify-between mb-3">
