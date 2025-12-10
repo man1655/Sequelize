@@ -143,7 +143,7 @@ return await Department.findAll({
 };
 
 // 3.2 Career Progression
-export const averagePromotionTimeService = async () => {
+export const averagePromotionTimeService = async () => {  
   return await sequelize.query(`
     SELECT 
         eph1.employee_id,
