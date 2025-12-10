@@ -273,7 +273,7 @@ export const promotionRecommendation = async () => {
         {
           model: EmployeePromotionHistory,
           attributes: [], //
-          required: false, // 
+          required: false, // LEFT JOIN
         }
       ],
       where: {
