@@ -9,6 +9,9 @@ const SkillInventory = () => {
   const [activeTab, setActiveTab] = useState('common');
     const navigate=useNavigate();
     const dispatch=useDispatch();
+    useEffect(() => {
+  window.scrollTo(0, 0);
+}, []);
     
   const {salaryBand=[]}=useSelector((state)=>state.Skill);
 
@@ -329,6 +332,7 @@ const SkillInventory = () => {
         </div>
       </div>
     </div>
+    
   );
 };
 

@@ -149,7 +149,7 @@ export const employeeSalaryBan=async(req,res)=>{
   try{
     const data=await salaryBand();
     if(data){
-      res.status(200).json(data)
+      res.status(200).json({data:data})
     }else{
       res.status(500).json("some err occured")
     }
