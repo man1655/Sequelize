@@ -129,7 +129,7 @@ const HRHomePage = () => {
 
           {/* Compensation Analysis Card */}
           <div className="bg-slate-800 rounded-xl shadow-xl border border-slate-700 overflow-hidden hover:border-purple-500 transition-all">
-            <div className="bg-gradient-to-br from-purple-600 to-purple-700 p-8 pb-16">
+            <div className="bg-gradient-to-br from-purple-600 to-purple-700 p-8 ">
               <div className="flex items-center justify-between mb-4">
                 <DollarSign className="w-14 h-14 text-white" />
                 <div className="bg-white bg-opacity-20 rounded-lg p-2.5">

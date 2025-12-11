@@ -6,11 +6,16 @@ import { DepartmentChnages, fetchDepartures, fetchNewHires, fetchSalaryChnages }
 
 
 const MonthlyReport = () => {
+  useEffect(() => {
+  window.scrollTo(0, 0);
+}, []);
 
   const {newHires}=useSelector((state)=>state.Monthly);
   const {departures}=useSelector((state)=>state.Monthly);
   const {salaryChange}=useSelector((state)=>state.Monthly);
   const {deptChnage}=useSelector((state)=>state.Monthly);
+    const { loading } = useSelector((state) => state.Monthly);
+  
 
   const dispatch=useDispatch();
 
@@ -20,6 +25,13 @@ const MonthlyReport = () => {
     dispatch(fetchSalaryChnages());
     dispatch(DepartmentChnages());
   },[dispatch])
+
+    const refreshData = () => {
+       dispatch(fetchNewHires());
+    dispatch(fetchDepartures());
+    dispatch(fetchSalaryChnages());
+    dispatch(DepartmentChnages());
+    };
 
 
   const [activeTab, setActiveTab] = useState('hires');
@@ -73,9 +85,16 @@ const MonthlyReport = () => {
                 <p className="text-slate-400 mt-1">December 2024 - Workforce Changes</p>
               </div>
             </div>
-            <button className="flex items-center space-x-2 bg-slate-700 hover:bg-slate-600 px-4 py-2 rounded-lg transition-colors">
-              <RefreshCw className="w-4 h-4 text-slate-300" />
-              <span className="text-slate-300 text-sm font-medium">Refresh</span>
+            <button
+              onClick={refreshData}
+              disabled={loading}
+              className="px-4 py-2 bg-blue-400 text-white rounded disabled:opacity-50"
+            >
+              {loading ? (
+                <span className="animate-spin inline-block">↻</span>
+              ) : (
+                <span className="">⟳</span>
+              )}
             </button>
           </div>
         </div>
